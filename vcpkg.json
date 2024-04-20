@@ -1,7 +1,8 @@
 {
   "dependencies": [
     "sqlite3",
-    "asio"
+    "asio",
+    "openssl"
   ],
   "builtin-baseline": "1b2372fdd420185c6f516541b81228c55061dca4"
 }

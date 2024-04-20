@@ -1,64 +1,84 @@
-#pragma once
+// Server.h
+//
 
+#pragma once
 #include <map>
 #include <string>
 #include <vector>
 #include <optional>
+#include <WinSock2.h>
+#include <Windows.h>
+#include <sqlite3.h>
 
-// 使用C++23的模块和概念
-export module server;
-
-// 学生信息
-struct Student {
-    std::string name;
-    int id;
-    std::map<std::string, int> scores; // 课程和成绩
-};
-
-class Server {
-public:
-    // 登录
-	bool login(const std::string& username, const std::string& password);
-	// 注销
-	void logout(const std::string& username);
-	// 获取用户权限
-	std::string getPermission(const std::string& username) const;
-	// 设置用户权限
-	void setPermission(const std::string& username, const std::string& permission);
+#define function auto
+using namespace std;
+/*
+class Server
+{
 private:
-    std::string username;
-    std::string permission;
+    SOCKET serverSocket;
+    SOCKET outputSocket;
+    Teacher teacher;
+public:
+    Server() : teacher();
+    ~Server() { SetConsoleCtrlHandler(CtrlHandler, FALSE); };
+    inline static BOOL WINAPI CtrlHandler(DWORD fdwCtrlType)
+    {
+        switch (fdwCtrlType)
+        {
+        case CTRL_CLOSE_EVENT:
+            // 在这里执行需要在关闭时进行的清理操作
+            return TRUE;
+        default:
+            return FALSE;
+        }
+    }
+
+    function InitSSL()->int;
+    function HandleRequest()->int;
+    function SetEnv()->std::string;
+};*/
+
+class Student
+{
+public:
+    std::string Number;
+    std::string Name;
+    std::string Sex;
+    std::string Age;
+    float Grade1;
+    float Grade2;
+    float Grade3;
+
+    Student(string id, string name, string sex, string age, float grade1, float grade2, float grade3)
+        : Number(id), Name(name), Sex(sex), Age(age), Grade1(grade1), Grade2(grade2), Grade3(grade3) {}
 };
 
-// 用户数据库
-class UserDatabase {
+class Teacher {
 public:
-	// 添加用户
-	void addUser(const std::string& username, const std::string& password);
-	// 删除用户
-	void removeUser(const std::string& username);
-	// 更新用户密码
-	void updatePassword(const std::string& username, const std::string& password);
-	// 查询所有用户列表
-	std::vector<std::string> getAllUsers() const;
+    vector<Student> students;
+    sqlite3* db;
+
+public:
+    Teacher();
+    ~Teacher();
+    void Add();
+    void Delete();
+    void Modify(std::string id);
+    void Query();
+    void Save();
+    void Load();
+    void DesTory();
+    void TJ();
+
 private:
-    std::map<std::string, std::string> users_; // 用户名
-    std::map<std::string, std::string> permissions_; // 用户名和权限
+    void AddStudent(const std::string &id, const std::string &name, const std::string &sex, const std::string &age, float grade1, float grade2, float grade3);
+    void DeleteStudent(const std::string &id);
+    void ModifyStudent(const std::string &id);
+    void QueryStudents();
+    void SaveData();
+    void LoadData();
+    void DestroyData();
+    void StatisticStudents();
 };
 
-// 学生数据库
-class StudentDatabase {
-public:
-    // 添加学生
-    void addStudent(const Student& student);
-    // 删除学生
-    void removeStudent(int id);
-    // 更新学生信息
-    void updateStudent(const Student& student);
-    // 查询学生信息
-    std::optional<Student> getStudent(int id) const;
-    // 查询所有学生信息
-    std::vector<Student> getAllStudents() const;
-private:
-    std::map<int, Student> students_; // 学生ID和学生信息
-};

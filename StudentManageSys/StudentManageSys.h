@@ -1,26 +1,27 @@
 ﻿// StudentManageSys.h
 //
+
 #pragma once
 #include <asio.hpp>
 #include <string>
 #include <map>
 #include <iostream>
+#include <iostream>
+#include <string>
+#include <winsock2.h>
+#include <string_view>
+
+#define function auto
 
 class Client {
+	std::string ip;
+	std::string port;
 public:
-    Client(asio::io_context& io_context, const std::string& server, const std::string& port)
-        : socket_(io_context) {
-        // 连接到服务器
-        asio::ip::tcp::resolver resolver(io_context);
-        asio::connect(socket_, resolver.resolve(server, port));
-    }
-    ~Client();
-
-    bool login(std::string_view username, std::string_view password);
-    std::map<std::string, std::string> get_student_info();
-
-private:
-    std::string encrypt_password(const std::string& password);
-
-    asio::ip::tcp::socket socket_;
+	Client();
+	~Client();
+	function EncryptData(std::string_view data,std::string_view enkey)->std::string;
+	function DecryptData(std::string_view data,std::string_view enkey)->std::string;
+	function ConnectServer()->int;
+	function SendCommand()->int;
+	function GetCommand()->std::string;
 };

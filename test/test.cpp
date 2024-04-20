@@ -21,7 +21,7 @@ public:
 };
 
 class Teacher {
-private:
+public:
     vector<Student> students;
     sqlite3* db;
 
@@ -81,6 +81,7 @@ public:
 
         // 将新学生添加到数据库
         AddStudent(id, name, sex, age, grade1, grade2, grade3);
+        system("pause");
     }
 
     void Delete() {
