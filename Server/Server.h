@@ -82,3 +82,23 @@ private:
     void StatisticStudents();
 };
 
+
+class Server
+{
+private:
+    SOCKET serverSocket;
+    SOCKET outputSocket;
+    Teacher teacher;
+
+public:
+    Server();
+    ~Server();
+    void run();
+
+private:
+    void handleClient(SOCKET clientSocket);
+    void handleCommand(SOCKET clientSocket, const string& command);
+    void sendResponse(SOCKET clientSocket, const string& response);
+    string queryStudents();
+    string statisticStudents();
+};
