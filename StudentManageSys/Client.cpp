@@ -24,8 +24,8 @@ int main() {
 
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    inet_pton(AF_INET, "127.0.0.1", &(serverAddr.sin_addr)); // 使用 inet_pton 替换 inet_addr
-    serverAddr.sin_port = htons(8888); // 服务器端口号
+    inet_pton(AF_INET, "127.0.0.1", &(serverAddr.sin_addr)); // 浣跨敤 inet_pton 鏇挎崲 inet_addr
+    serverAddr.sin_port = htons(8888); // 鏈嶅姟鍣ㄧ鍙ｅ彿
 
     if (connect(clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
         cerr << "Failed to connect to server: " << WSAGetLastError() << endl;
@@ -46,7 +46,7 @@ int main() {
                 break;
             }
             if (bytesReceived == 0) {
-                // 服务器断开连接
+                // 鏈嶅姟鍣ㄦ柇寮�杩炴帴
                 cout << "Server disconnected." << endl;
                 break;
             }

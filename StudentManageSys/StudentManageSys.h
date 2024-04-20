@@ -1,4 +1,4 @@
-﻿// StudentManageSys.h
+// StudentManageSys.h
 //
 
 #pragma once

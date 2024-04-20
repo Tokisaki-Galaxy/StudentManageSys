@@ -1,4 +1,4 @@
-﻿// StudentManageSys.cpp
+// StudentManageSys.cpp
 //
 
 #include "StudentManageSys.h"
