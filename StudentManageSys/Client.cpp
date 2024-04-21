@@ -50,7 +50,14 @@ int main() {
                 cout << "Server disconnected." << endl;
                 break;
             }
-            cout << "Received: " << buffer << endl;
+            std::string receivedMessage(buffer, bytesReceived);
+            if (receivedMessage == "client-console-cls") {
+				//system("cls");
+                cout<< endl<<endl << endl;
+			}
+			else{
+            cout << "Received: \n" << buffer << endl;
+            }
         }
         closesocket(clientSocket);
         WSACleanup();
@@ -63,7 +70,7 @@ int main() {
         if (message == "exit") {
             break;
         }
-        int bytesSent = send(clientSocket, message.c_str(), message.length(), 0);
+        int bytesSent = send(clientSocket, message.c_str(), static_cast<int>(message.length()), 0);
         if (bytesSent == SOCKET_ERROR) {
             cerr << "Error sending data to server: " << WSAGetLastError() << endl;
             break;

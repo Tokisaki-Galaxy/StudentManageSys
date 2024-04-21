@@ -13,5 +13,6 @@ int main()
 {
     Server server;
     server.run();
+    system("pause");
     return 0;
 }

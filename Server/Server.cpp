@@ -12,6 +12,12 @@ using namespace std;
 
 Teacher::Teacher()
 {
+    // 检查是否存在数据库文件
+    // 如果不存在则创建数据库文件
+    if (std::filesystem::exists("students.db") == false)
+    {
+        cerr << "数据库文件不存在，正在创建数据库文件" << endl;
+    }
     // 创建或打开SQLite3数据库
     int rc = sqlite3_open("students.db", &db);
     if (rc != SQLITE_OK)
@@ -49,101 +55,22 @@ Teacher::~Teacher()
     sqlite3_close(db);
 }
 
-void Teacher::Add()
-{
-    string id, name, sex, age;
-    float grade1, grade2, grade3;
-
-    std::cout << "输入学号: ";
-    std::cin >> id;
-    std::cout << "输入姓名: ";
-    std::cin >> name;
-    std::cout << "输入性别: ";
-    std::cin >> sex;
-    std::cout << "输入年龄: ";
-    std::cin >> age;
-    std::cout << "输入实验成绩: ";
-    std::cin >> grade1;
-    std::cout << "输入考勤成绩: ";
-    std::cin >> grade2;
-    std::cout << "输入报告成绩: ";
-    std::cin >> grade3;
-
-    // 将新学生添加到数据库
-    AddStudent(id, name, sex, age, grade1, grade2, grade3);
-    system("pause");
-}
-
-void Teacher::Delete()
-{
-    string id;
-    std::cout << "输入要删除的学生ID: ";
-    std::cin >> id;
-
-    // 从数据库删除学生
-    DeleteStudent(id);
-    system("pause");
-}
-
-void Teacher::Modify(string id)
-{
-    // 从数据库查找学生并修改
-    ModifyStudent(id);
-    system("pause");
-}
-
-void Teacher::Query()
-{
-    // 从数据库查询学生信息
-    QueryStudents();
-    system("pause");
-}
-
-void Teacher::Save()
-{
-    // 将所有学生信息保存到数据库
-    SaveData();
-    system("pause");
-}
-
-void Teacher::Load()
-{
-    // 从数据库读取所有学生信息
-    LoadData();
-    system("pause");
-}
-
-void Teacher::DesTory()
-{
-    // 清空数据库中的所有学生信息
-    DestroyData();
-    system("pause");
-}
-
-void Teacher::TJ()
-{
-    // 统计学生成绩信息
-    StatisticStudents();
-    system("pause");
-}
-
-void Teacher::AddStudent(const string &id, const string &name, const string &sex, const string &age, float grade1, float grade2, float grade3)
+void Teacher::AddStudent(std::string_view id, std::string_view name, std::string_view sex, std::string_view age, float grade1, float grade2, float grade3)
 {
     // 将新学生添加到数据库
-    char *zErrMsg = 0;
     string sql = "INSERT INTO students VALUES (?, ?, ?, ?, ?, ?, ?)";
     sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+    int rc = sqlite3_prepare_v2(db, sql.data(), -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
         cerr << "SQL error: " << sqlite3_errmsg(db) << endl;
         return;
     }
 
-    sqlite3_bind_text(stmt, 1, id.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 2, name.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 3, sex.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 4, age.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 1, id.data(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, name.data(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 3, sex.data(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 4, age.data(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_double(stmt, 5, grade1);
     sqlite3_bind_double(stmt, 6, grade2);
     sqlite3_bind_double(stmt, 7, grade3);
@@ -157,20 +84,19 @@ void Teacher::AddStudent(const string &id, const string &name, const string &sex
     sqlite3_finalize(stmt);
 }
 
-void Teacher::DeleteStudent(const string &id)
+void Teacher::DeleteStudent(std::string_view id)
 {
     // 从数据库删除学生
-    char *zErrMsg = 0;
     string sql = "DELETE FROM students WHERE id = ?";
     sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+    int rc = sqlite3_prepare_v2(db, sql.data(), -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
         cerr << "SQL error: " << sqlite3_errmsg(db) << endl;
         return;
     }
 
-    sqlite3_bind_text(stmt, 1, id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 1, id.data(), -1, SQLITE_TRANSIENT);
 
     rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE)
@@ -181,82 +107,42 @@ void Teacher::DeleteStudent(const string &id)
     sqlite3_finalize(stmt);
 }
 
-void Teacher::ModifyStudent(const string &id)
+void Teacher::ModifyStudent(std::string_view id, std::string_view aid, std::string_view name, std::string_view sex, std::string_view age, float grade1, float grade2, float grade3)
 {
-    // 从数据库查找学生并修改
-    char *zErrMsg = 0;
-    string sql = "SELECT * FROM students WHERE id = ?";
-    sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+    string sql = "UPDATE students SET id = ?, name = ?, sex = ?, age = ?, grade1 = ?, grade2 = ?, grade3 = ? WHERE id = ?";
+    sqlite3_stmt* stmt;
+    int rc = sqlite3_prepare_v2(db, sql.data(), -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
         cerr << "SQL error: " << sqlite3_errmsg(db) << endl;
         return;
     }
 
-    sqlite3_bind_text(stmt, 1, id.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 1, aid.data(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, name.data(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 3, sex.data(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 4, age.data(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_double(stmt, 5, grade1);
+    sqlite3_bind_double(stmt, 6, grade2);
+    sqlite3_bind_double(stmt, 7, grade3);
+    sqlite3_bind_text(stmt, 8, id.data(), -1, SQLITE_TRANSIENT);
 
     rc = sqlite3_step(stmt);
-    if (rc == SQLITE_ROW)
+    if (rc != SQLITE_DONE)
     {
-        string name = (char *)sqlite3_column_text(stmt, 1);
-        string sex = (char *)sqlite3_column_text(stmt, 2);
-        string age = (char *)sqlite3_column_text(stmt, 3);
-        float grade1 = (float)sqlite3_column_double(stmt, 4);
-        float grade2 = (float)sqlite3_column_double(stmt, 5);
-        float grade3 = (float)sqlite3_column_double(stmt, 6);
-
-        std::cout << "当前学生信息:\n"
-                  << "学号: " << id << "\n"
-                  << "姓名: " << name << "\n"
-                  << "性别: " << sex << "\n"
-                  << "年龄: " << age << "\n"
-                  << "实验成绩: " << grade1 << "\n"
-                  << "考勤成绩: " << grade2 << "\n"
-                  << "报告成绩: " << grade3 << "\n";
-
-        std::cout << "请输入新的信息:\n";
-        std::cin >> name >> sex >> age >> grade1 >> grade2 >> grade3;
-
-        sql = "UPDATE students SET name = ?, sex = ?, age = ?, grade1 = ?, grade2 = ?, grade3 = ? WHERE id = ?";
-        rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
-        if (rc != SQLITE_OK)
-        {
-            cerr << "SQL error: " << sqlite3_errmsg(db) << endl;
-            return;
-        }
-
-        sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
-        sqlite3_bind_text(stmt, 2, sex.c_str(), -1, SQLITE_TRANSIENT);
-        sqlite3_bind_text(stmt, 3, age.c_str(), -1, SQLITE_TRANSIENT);
-        sqlite3_bind_double(stmt, 4, grade1);
-        sqlite3_bind_double(stmt, 5, grade2);
-        sqlite3_bind_double(stmt, 6, grade3);
-        sqlite3_bind_text(stmt, 7, id.c_str(), -1, SQLITE_TRANSIENT);
-
-        rc = sqlite3_step(stmt);
-        if (rc != SQLITE_DONE)
-        {
-            cerr << "SQL error: " << sqlite3_errmsg(db) << endl;
-        }
-
-        sqlite3_finalize(stmt);
-    }
-    else
-    {
-        cerr << "未找到该学生" << endl;
+        cerr << "SQL error: " << sqlite3_errmsg(db) << endl;
     }
 
     sqlite3_finalize(stmt);
+    LoadData(); // 重新加载数据
 }
 
 void Teacher::QueryStudents()
 {
     // 从数据库查询所有学生信息
-    char *zErrMsg = 0;
     string sql = "SELECT * FROM students";
     sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+    int rc = sqlite3_prepare_v2(db, sql.data(), -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
         cerr << "SQL error: " << sqlite3_errmsg(db) << endl;
@@ -292,20 +178,41 @@ void Teacher::QueryStudents()
 
 void Teacher::SaveData()
 {
-    // 将所有学生信息保存到数据库
-    for (const auto &student : students)
+    for (const auto& student : students)
     {
-        AddStudent(student.Number, student.Name, student.Sex, student.Age, student.Grade1, student.Grade2, student.Grade3);
+        string sql = "UPDATE students SET name = ?, sex = ?, age = ?, grade1 = ?, grade2 = ?, grade3 = ? WHERE id = ?";
+        sqlite3_stmt* stmt;
+        int rc = sqlite3_prepare_v2(db, sql.data(), -1, &stmt, NULL);
+        if (rc != SQLITE_OK)
+        {
+            cerr << "SQL error: " << sqlite3_errmsg(db) << endl;
+            continue;
+        }
+
+        sqlite3_bind_text(stmt, 1, student.Name.data(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, student.Sex.data(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 3, student.Age.data(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_double(stmt, 4, student.Grade1);
+        sqlite3_bind_double(stmt, 5, student.Grade2);
+        sqlite3_bind_double(stmt, 6, student.Grade3);
+        sqlite3_bind_text(stmt, 7, student.Number.data(), -1, SQLITE_TRANSIENT);
+
+        rc = sqlite3_step(stmt);
+        if (rc != SQLITE_DONE)
+        {
+            cerr << "SQL error: " << sqlite3_errmsg(db) << endl;
+        }
+
+        sqlite3_finalize(stmt);
     }
 }
 
 void Teacher::LoadData()
 {
     // 从数据库读取所有学生信息
-    char *zErrMsg = 0;
     string sql = "SELECT * FROM students";
     sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+    int rc = sqlite3_prepare_v2(db, sql.data(), -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
         cerr << "SQL error: " << sqlite3_errmsg(db) << endl;
@@ -337,10 +244,9 @@ void Teacher::LoadData()
 void Teacher::DestroyData()
 {
     // 清空数据库中的所有学生信息
-    char *zErrMsg = 0;
     string sql = "DELETE FROM students";
     sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+    int rc = sqlite3_prepare_v2(db, sql.data(), -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
         cerr << "SQL error: " << sqlite3_errmsg(db) << endl;
@@ -359,10 +265,9 @@ void Teacher::DestroyData()
 void Teacher::StatisticStudents()
 {
     // 从数据库读取学生成绩信息并统计
-    char *zErrMsg = 0;
     string sql = "SELECT * FROM students";
     sqlite3_stmt *stmt;
-    int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, NULL);
+    int rc = sqlite3_prepare_v2(db, sql.data(), -1, &stmt, NULL);
     if (rc != SQLITE_OK)
     {
         cerr << "SQL error: " << sqlite3_errmsg(db) << endl;
@@ -450,7 +355,7 @@ Server::~Server()
     WSACleanup();
 }
 
-void Server::run()
+function Server::run() -> void
 {
     while (true)
     {
@@ -459,6 +364,7 @@ void Server::run()
         if (clientSocket == INVALID_SOCKET)
         {
             cerr << "Failed to accept client connection: " << WSAGetLastError() << endl;
+            Sleep(3000);
             continue;
         }
 
@@ -470,92 +376,136 @@ void Server::run()
         // 关闭客户端套接字
         closesocket(clientSocket);
     }
+    return;
 }
 
-void Server::handleClient(SOCKET clientSocket)
+function Server::handleClient(SOCKET clientSocket) -> void
 {
-    char buffer[1024];
-    int bytesReceived;
     while (true)
     {
+        teacher.LoadData();
+        menu(clientSocket);
         // 接收客户端发送的命令
-        ZeroMemory(buffer, sizeof(buffer));
-        bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-        if (bytesReceived == SOCKET_ERROR)
+        std::string command = reciveCommand(clientSocket);
+
+        // 检查是否接收到错误或异常
+        if (command == "error" || command.empty()) // 你需要根据 reciveCommand 的实现来检查错误
         {
-            cerr << "Error receiving data from client: " << WSAGetLastError() << endl;
-            break;
-        }
-        if (bytesReceived == 0)
-        {
-            // 客户端断开连接
             cout << "Client disconnected." << endl;
             break;
         }
 
         // 处理客户端命令
-        string command(buffer, bytesReceived);
         handleCommand(clientSocket, command);
+        sendResponse(clientSocket, "client-console-cls");
+        Sleep(300);
     }
+    return;
 }
 
-void Server::handleCommand(SOCKET clientSocket, const string &command)
+function Server::handleCommand(SOCKET clientSocket, std::string_view command) -> void
 {
     // 根据客户端命令执行相应操作
-    if (command == "1")
+    switch (stoi(command.data()))
     {
-        teacher.Add();
+    case 1:
+    {
+        sendResponse(clientSocket, "请输入你要添加的学生学号（ID）");
+        std::string id = reciveCommand(clientSocket);
+        sendResponse(clientSocket, "请输入你要添加的学生姓名");
+        std::string name = reciveCommand(clientSocket);
+        sendResponse(clientSocket, "请输入你要添加的学生性别");
+        std::string sex = reciveCommand(clientSocket);
+        sendResponse(clientSocket, "请输入你要添加的学生年龄");
+        std::string age = reciveCommand(clientSocket);
+        sendResponse(clientSocket, "请输入你要添加的学生实验成绩");
+        float grage1 = std::stof(reciveCommand(clientSocket));
+        sendResponse(clientSocket, "请输入你要添加的学生考勤成绩");
+        float grage2 = std::stof(reciveCommand(clientSocket));
+        sendResponse(clientSocket, "请输入你要添加的学生报告成绩");
+        float grage3 = std::stof(reciveCommand(clientSocket));
+        teacher.AddStudent(id, name, sex, age, grage1, grage2, grage3);
         sendResponse(clientSocket, "成功添加新学生成绩");
+        break;
     }
-    else if (command == "2")
-    {
-        teacher.Delete();
+    case 2:
+        sendResponse(clientSocket, "请输入你要删除的学生的学号");
+        teacher.DeleteStudent(reciveCommand(clientSocket));
         sendResponse(clientSocket, "成功删除学生成绩");
-    }
-    else if (command.substr(0, 2) == "3 ")
+        break;
+    case 3:
     {
-        string id = command.substr(2);
-        teacher.Modify(id);
+        sendResponse(clientSocket, "请输入你要修改的学生的学号");
+        std::string id = reciveCommand(clientSocket);
+        sendResponse(clientSocket, "请输入修改后学生学号（ID）");
+        std::string aid = reciveCommand(clientSocket);
+        sendResponse(clientSocket, "请输入修改后学生姓名");
+        std::string name = reciveCommand(clientSocket);
+        sendResponse(clientSocket, "请输入修改后学生性别");
+        std::string sex = reciveCommand(clientSocket);
+        sendResponse(clientSocket, "请输入修改后学生年龄");
+        std::string age = reciveCommand(clientSocket);
+        sendResponse(clientSocket, "请输入修改后学生实验成绩");
+        float grade1 = std::stof(reciveCommand(clientSocket));
+        sendResponse(clientSocket, "请输入修改后学生考勤成绩");
+        float grade2 = std::stof(reciveCommand(clientSocket));
+        sendResponse(clientSocket, "请输入修改后学生报告成绩");
+        float grade3 = std::stof(reciveCommand(clientSocket));
+        teacher.ModifyStudent(id, aid, name,sex,age,grade1,grade2,grade3);
         sendResponse(clientSocket, "成功修改学生成绩");
+        break;
     }
-    else if (command == "4")
-    {
-        string response = queryStudents();
-        sendResponse(clientSocket, response);
-    }
-    else if (command == "5")
-    {
-        teacher.Save();
+    case 4:
+        sendResponse(clientSocket, queryStudents());
+        break;
+    case 5:
+        teacher.SaveData();
         sendResponse(clientSocket, "成功保存数据");
-    }
-    else if (command == "6")
-    {
-        teacher.DesTory();
+        break;
+    case 6:
+        teacher.DestroyData();
         sendResponse(clientSocket, "成功清除学生成绩");
-    }
-    else if (command == "7")
-    {
-        string response = statisticStudents();
-        sendResponse(clientSocket, response);
-    }
-    else
-    {
+        break;
+    case 7:
+        sendResponse(clientSocket, statisticStudents());
+        break;
+    default:
         sendResponse(clientSocket, "无效命令");
+        break;
     }
+    teacher.SaveData();
+    return;
 }
 
-void Server::sendResponse(SOCKET clientSocket, const string &response)
+function Server::sendResponse(SOCKET clientSocket, std::string_view response) -> void
 {
-    int bytesSent = send(clientSocket, response.c_str(), response.length(), 0);
-    if (bytesSent == SOCKET_ERROR)
+    if (send(clientSocket, response.data(), static_cast<int>(response.length()), 0) == SOCKET_ERROR)
     {
         cerr << "Error sending data to client: " << WSAGetLastError() << endl;
     }
 }
 
-string Server::queryStudents()
+function Server::reciveCommand(SOCKET clientSocket) -> std::string
 {
-    string response;
+    std::vector<char> buffer(1024);
+    int bytesReceived = recv(clientSocket, buffer.data(), static_cast<int>(buffer.size()), 0);
+    if (bytesReceived == SOCKET_ERROR)
+    {
+        std::cerr << "Error receiving data from client: " << WSAGetLastError() << std::endl;
+        return "";
+    }
+    else if (bytesReceived == 0)
+    {
+        // 客户端断开连接
+        std::cout << "Client disconnected." << std::endl;
+        return "";
+    }
+    return std::string(buffer.begin(), buffer.begin() + bytesReceived);
+}
+
+function Server::queryStudents() -> std::string
+{
+    std::string response;
     for (const auto &student : this->teacher.students)
     {
         response += "学号: " + student.Number + "\n"
@@ -575,7 +525,7 @@ string Server::queryStudents()
     return response;
 }
 
-string Server::statisticStudents()
+function Server::statisticStudents() -> std::string
 {
     int totalStudents = 0, failGrade1 = 0, failGrade2 = 0, failGrade3 = 0;
     for (const auto &student : this->teacher.students)
@@ -599,43 +549,19 @@ string Server::statisticStudents()
     return response;
 }
 
-/*
-int main() {
-Teacher m;
-int c;
-do {
-    system("cls");
-    std::cout << "                             欢迎使用学生成绩管理系统" << endl;
-    std::cout << "                    ==========================================" << endl;
-    std::cout << "                    ||  \t    1.新增学生成绩    \t   ||" << endl;
-    std::cout << "                    ||  \t    2.删除学生成绩    \t   ||" << endl;
-    std::cout << "                    ||  \t    3.修改学生成绩    \t   ||" << endl;
-    std::cout << "                    ||  \t    4.查询详细信息  \t   ||" << endl;
-    std::cout << "                    ||  \t    5.保存数据      \t   ||" << endl;
-    std::cout << "                    ||  \t    6.清除学生成绩    \t   ||" << endl;
-    std::cout << "                    ||  \t    7.统计名单    \t   ||" << endl;
-    std::cout << "                    ||  \t    8.退出    \t\t   ||" << endl;
-    std::cout << "                    ==========================================" << endl;
-    std::cout << "   请选择(1-8):";
-    std::cin >> c;
-    switch (c)
-    {
-    case 1: m.Add(); break;
-    case 2: m.Delete(); break;
-    case 3: {
-        string id;
-        std::cout << "请输入要修改人员的ID:  ";
-        std::cin >> id;
-        m.Modify(id);
-    }; break;
-    case 4: m.Query(); break;
-    case 5: m.Save(); break;
-    case 6: m.DesTory(); break;
-    case 7: m.TJ(); break;
-    case 8: return 0;
-    default: break;
-    }
-} while (c != 8);
 
-return 0;
-}*/
+function Server::menu(SOCKET clientSocket)->int {
+    string response= "\n                             欢迎使用学生成绩管理系统\n";
+    response += "                    ==========================================\n";
+    response += "                    ||  \t    1.新增学生成绩    \t   ||\n";
+    response += "                    ||  \t    2.删除学生成绩    \t   ||\n";
+    response += "                    ||  \t    3.修改学生成绩    \t   ||\n";
+    response += "                    ||  \t    4.查询详细信息  \t   ||\n";
+    response += "                    ||  \t    5.保存数据      \t   ||\n";
+    response += "                    ||  \t    6.清除学生成绩    \t   ||\n";
+    response += "                    ||  \t    7.统计名单    \t   ||\n";
+    response += "                    ==========================================\n";
+    response += "   请选择(1-8):";
+    sendResponse(clientSocket, response);
+    return 0;
+}
