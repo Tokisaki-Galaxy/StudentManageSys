@@ -22,10 +22,23 @@ int main() {
         return 1;
     }
 
+    string serverIP;
+    string serverPort;
+    std::cout << "输入服务器IP地址(为空则默认127.0.0.1):";
+    getline(cin, serverIP);
+    if (serverIP.empty()) {
+        serverIP = "127.0.0.1";
+    }
+
+    std::cout << "输入服务器端口(为空则默认8888):";
+    getline(cin, serverPort);
+    if (serverPort.empty()) {
+        serverPort = "8888";
+    }
     sockaddr_in serverAddr;
     serverAddr.sin_family = AF_INET;
-    inet_pton(AF_INET, "127.0.0.1", &(serverAddr.sin_addr)); // 使用 inet_pton 替换 inet_addr
-    serverAddr.sin_port = htons(8888); // 服务器端口号
+    inet_pton(AF_INET, serverIP.data(), &(serverAddr.sin_addr));
+    serverAddr.sin_port = htons(stoi(serverPort));
 
     if (connect(clientSocket, (sockaddr*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
         cerr << "Failed to connect to server: " << WSAGetLastError() << endl;
